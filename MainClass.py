@@ -21,8 +21,10 @@ class Ventana:
 	def botones(self):
 		btnCarga = Button(self.root, text = 'Cargar archivo', command = self.cargarArchivo , width = 30)
 		btnCrea = Button(self.root, text = 'Crear Horario',command = self.creaHorario, width = 30)
+		btnMuestra = Button(self.root, text = 'Muestra Horario',command = self.muestraHorario, width = 30)
 		btnCarga.grid(row = 1, column = 0)
 		btnCrea.grid(row = 3, column = 0)
+		btnMuestra.grid(row = 4, column = 0)
 	
 	def cargarArchivo(self):
 		file = tkFileDialog.askopenfile(mode = 'r', title='Elije un archivo', filetypes = [('Excel File','*.xlsx'),])
@@ -92,6 +94,40 @@ class Ventana:
 					mat_temp = self.hoja.row(rx)[1].value
 		return i
 		
+	
+	def verifyClassTimeSlot(self,record,dia):
+		pr, i, penalizaciones = 0, 1, 0
+		while (i < record):
+			if pr == self.clasesPorDia[i][6] and self.clasesPorDia[i][5] == 'x':
+				retorno = self.addClass(self.clasesPorDia[i][6],self.clasesPorDia[i][7],self.clasesPorDia[i][0],dia)
+				pr = retorno[1]
+				penalizaciones = retorno[0] + penalizaciones
+				i = 0
+			else:
+				i = i + 1
+		print 'Penalizaciones: ' + str(penalizaciones)
+	
+	def addClass(self, pi,pf,idClase,dia):
+		penalizacion = 0
+		permiso = False
+		salon = 0
+		while(permiso == False):
+			for i in range(pi,pf):
+				if self.Salones[dia][salon][i] == 0:
+					permiso = True
+				else:
+					permiso = False
+					salon = salon + 1
+					break
+		if permiso:
+			for i in range(pi,pf):
+				self.Salones[dia][salon][i] = idClase	
+			if (salon >= 11):
+				penalizacion = penalizacion + 1
+			self.clasesPorDia[idClase][4] = 1
+			self.clasesPorDia[idClase][5] = salon
+		return penalizacion, self.clasesPorDia[idClase][7]
+	
 	def creaHorario(self):
 		self.setExcelBook()
 		print 'Libro cargado correctamente'
@@ -100,7 +136,16 @@ class Ventana:
 		for i in range(5):
 			self.record = self.classRecord(i + 6)
 			print 'Dia ' + str(i) + ' leido correctamente'
-		for 
+		for i in range(20):
+			self.verifyClassTimeSlot(self.record, 1)
+		
+	def muestraHorario(self):
+		for i in range(len(self.Salones)):
+			print 'Dia ' + str(i)
+			for j in range(len(self.Salones[i])):
+				print 'Salon ' + str(j)
+				print self.Salones[i][j]
+				raw_input()
 			
 """
 class Horario:
