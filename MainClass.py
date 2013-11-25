@@ -2,6 +2,7 @@
 #librerias a instalar 
 #xlrd, xlwt, xlutils
 import xlrd
+import xlwt
 from Tkinter import *
 import tkFileDialog
 
@@ -14,6 +15,9 @@ class Ventana:
 		self.clasesPorDia = range(450)
 		self.Salones = range(5) #dias
 		self.record = 0
+		self.penalizaciones = 0
+		self.totalPenalizaciones = 0
+		self.wb = xlwt.Workbook()
 	
 	def inicio(self):
 		self.root.mainloop()
@@ -22,9 +26,11 @@ class Ventana:
 		btnCarga = Button(self.root, text = 'Cargar archivo', command = self.cargarArchivo , width = 30)
 		btnCrea = Button(self.root, text = 'Crear Horario',command = self.creaHorario, width = 30)
 		btnMuestra = Button(self.root, text = 'Muestra Horario',command = self.muestraHorario, width = 30)
+		btnMuestraClasesPorDia = Button(self.root, text = 'Muestra db',command = self.muestraClasesPorDia, width = 30)
 		btnCarga.grid(row = 1, column = 0)
 		btnCrea.grid(row = 3, column = 0)
 		btnMuestra.grid(row = 4, column = 0)
+		btnMuestraClasesPorDia.grid(row = 5, column = 0)
 	
 	def cargarArchivo(self):
 		file = tkFileDialog.askopenfile(mode = 'r', title='Elije un archivo', filetypes = [('Excel File','*.xlsx'),])
@@ -95,9 +101,9 @@ class Ventana:
 		return i
 		
 	
-	def verifyClassTimeSlot(self,record,dia):
+	def verifyClassTimeSlot(self,dia):
 		pr, i, penalizaciones = 0, 1, 0
-		while (i < record):
+		while (i < self.record):
 			if pr == self.clasesPorDia[i][6] and self.clasesPorDia[i][5] == 'x':
 				retorno = self.addClass(self.clasesPorDia[i][6],self.clasesPorDia[i][7],self.clasesPorDia[i][0],dia)
 				pr = retorno[1]
@@ -105,7 +111,7 @@ class Ventana:
 				i = 0
 			else:
 				i = i + 1
-		print 'Penalizaciones: ' + str(penalizaciones)
+		#print 'Penalizaciones: ' + str(penalizaciones)
 	
 	def addClass(self, pi,pf,idClase,dia):
 		penalizacion = 0
@@ -133,11 +139,33 @@ class Ventana:
 		print 'Libro cargado correctamente'
 		self.setMatrix()
 		print 'Matrices creadas correctamente'
-		for i in range(5):
-			self.record = self.classRecord(i + 6)
-			print 'Dia ' + str(i) + ' leido correctamente'
-		for i in range(20):
-			self.verifyClassTimeSlot(self.record, 1)
+		#creacion de nuevo libro excel:
+		ws = self.wb.add_sheet('Test',cell_overwrite_ok=True)
+		for dia in range(5):
+			self.record = self.classRecord(dia + 6)
+			for i in range(20):
+				self.verifyClassTimeSlot(dia)
+			for i in range(len(self.clasesPorDia)):
+				if self.clasesPorDia[i][5] == 'x':
+					self.addClass(self.clasesPorDia[i][6],self.clasesPorDia[i][7],self.clasesPorDia[i][0],dia)
+			for i in range(len(self.clasesPorDia)):
+				if not self.clasesPorDia[i][0] == 0:
+					#print self.clasesPorDia[i]
+					ws.write(i,0,self.clasesPorDia[i][0])
+					ws.write(i,1,self.clasesPorDia[i][1])
+					ws.write(i,2,self.clasesPorDia[i][2])
+					ws.write(i,3,self.clasesPorDia[i][3])
+					ws.write(i,4,self.clasesPorDia[i][4])
+					ws.write(i,5,self.clasesPorDia[i][5])
+					ws.write(i,6,self.clasesPorDia[i][6])
+					ws.write(i,7,self.clasesPorDia[i][7])
+					ws.write(i,8,self.clasesPorDia[i][8])
+					#ws.write(0, 0, 'Test', style0)
+					if self.clasesPorDia[i][5] >=11 :
+						self.penalizaciones = self.penalizaciones + 1
+			self.totalPenalizaciones  = self.totalPenalizaciones  + self.penalizaciones
+			print self.penalizaciones
+			self.wb.save('example.xls')
 		
 	def muestraHorario(self):
 		for i in range(len(self.Salones)):
@@ -145,14 +173,12 @@ class Ventana:
 			for j in range(len(self.Salones[i])):
 				print 'Salon ' + str(j)
 				print self.Salones[i][j]
-				raw_input()
-			
-"""
-class Horario:
-	def __init__(self, libro):
-		self.libro = xlrd.open_workbook(libro)
-		self.hoja = libro.self.hojaeet_by_index(0)
-"""
+				#raw_input()
+	
+	def muestraClasesPorDia(self):
+		for rx in range(1, self.hoja.nrows):
+			print self.clasesPorDia[rx]
+
 ventana =  Ventana()
 ventana.botones()
 ventana.inicio()

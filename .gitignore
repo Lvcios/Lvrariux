@@ -1,5 +1,6 @@
 *.py[cod]
 *.xlsx
+*.xls
 # C extensions
 *.so
 
